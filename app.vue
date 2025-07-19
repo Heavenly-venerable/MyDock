@@ -50,6 +50,32 @@ function searchYouTube() {
   window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank')
 }
 
+const showModal = ref(false)
+const newBookmarkLabel = ref('')
+const newBookmarkURL = ref('')
+
+function openAddBookmarkModal() {
+  newBookmarkLabel.value = ''
+  newBookmarkURL.value = ''
+  showModal.value = true
+}
+
+function submitBookmark() {
+  if (
+    newBookmarkLabel.value.trim() &&
+    newBookmarkURL.value.trim().startsWith('http')
+  ) {
+    bookmarks.value.push({
+      label: newBookmarkLabel.value.trim(),
+      url: newBookmarkURL.value.trim(),
+    })
+    saveBookmarks()
+    showModal.value = false
+  } else {
+    alert('Label dan URL harus valid (URL harus mulai dengan http/https).')
+  }
+}
+
 onMounted(() => {
   const savedSearches = localStorage.getItem('recent-searches')
   if (savedSearches) recentSearches.value = JSON.parse(savedSearches)
@@ -85,7 +111,7 @@ onMounted(() => {
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
           <p>Bookmarks:</p>
-          <UButton icon="i-heroicons-plus" size="xs" color="gray" variant="ghost" @click="addBookmark">
+          <UButton icon="i-heroicons-plus" size="xs" color="gray" variant="ghost" @click="openAddBookmarkModal">
             Tambah
           </UButton>
         </div>
@@ -100,4 +126,17 @@ onMounted(() => {
       </div>
     </div>
   </main>
+  <UModal v-model="showModal"
+    :ui="{ container: 'flex items-start justify-center', base: 'relative max-w-md w-full p-6 rounded-lg bg-white dark:bg-gray-900' }">
+    <div class="p-4 space-y-4">
+      <h3 class="text-lg font-semibold">Tambah Bookmark</h3>
+      <UInput v-model="newBookmarkLabel" placeholder="Label (misal: GitHub)" />
+      <UInput v-model="newBookmarkURL" placeholder="URL (harus diawali http/https)" />
+      <div class="flex justify-end gap-2">
+        <UButton color="gray" variant="soft" @click="showModal = false">Batal</UButton>
+        <UButton color="primary" @click="submitBookmark">Simpan</UButton>
+      </div>
+    </div>
+  </UModal>
+
 </template>

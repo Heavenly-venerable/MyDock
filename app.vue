@@ -1,7 +1,42 @@
 <script setup lang="ts">
-const q = ref('')
+import { ref, onMounted } from 'vue'
 
+const q = ref('')
 const recentSearches = ref<string[]>([])
+
+type Bookmark = { label: string; url: string }
+const bookmarks = ref<Bookmark[]>([])
+
+function loadBookmarks() {
+  const saved = localStorage.getItem('bookmarks')
+  if (saved) bookmarks.value = JSON.parse(saved)
+}
+
+function saveBookmarks() {
+  localStorage.setItem('bookmarks', JSON.stringify(bookmarks.value))
+}
+
+function addBookmark() {
+  const label = prompt('Label situs? (misal: GitHub)')
+  const url = prompt('URL situs? (harus diawali http/https)')
+  if (label && url && url.startsWith('http')) {
+    bookmarks.value.push({ label, url })
+    saveBookmarks()
+  } else {
+    alert('Label dan URL harus valid.')
+  }
+}
+
+function removeBookmark(index: number) {
+  if (confirm('Hapus bookmark ini?')) {
+    bookmarks.value.splice(index, 1)
+    saveBookmarks()
+  }
+}
+
+function handleBookmarkClick(bookmark: Bookmark) {
+  window.open(bookmark.url, '_blank')
+}
 
 function saveSearch(term: string) {
   recentSearches.value = [term, ...recentSearches.value.filter(i => i !== term)].slice(0, 5)
@@ -16,8 +51,10 @@ function searchYouTube() {
 }
 
 onMounted(() => {
-  const saved = localStorage.getItem('recent-searches')
-  if (saved) recentSearches.value = JSON.parse(saved)
+  const savedSearches = localStorage.getItem('recent-searches')
+  if (savedSearches) recentSearches.value = JSON.parse(savedSearches)
+
+  loadBookmarks()
 })
 </script>
 
@@ -42,6 +79,22 @@ onMounted(() => {
               class="rounded-md shadow-sm hover:shadow transition">
               {{ item }}
             </UButton>
+          </li>
+        </ul>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
+          <p>Bookmarks:</p>
+          <UButton icon="i-heroicons-plus" size="xs" color="gray" variant="ghost" @click="addBookmark">
+            Tambah
+          </UButton>
+        </div>
+        <ul class="flex flex-wrap gap-2">
+          <li v-for="(bm, i) in bookmarks" :key="bm.url" class="flex items-center gap-1">
+            <UButton size="xs" color="gray" variant="soft" class="rounded-md" @click="handleBookmarkClick(bm)">
+              {{ bm.label }}
+            </UButton>
+            <UButton icon="i-heroicons-trash" color="red" variant="ghost" size="2xs" @click="removeBookmark(i)" />
           </li>
         </ul>
       </div>
